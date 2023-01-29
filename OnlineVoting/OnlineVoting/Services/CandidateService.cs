@@ -18,9 +18,9 @@ public class CandidateService : ICandidateService
         _mapper = mapper;
     }
 
-    public async Task<long> CreateCandidate(CandidateDto dto, CancellationToken cancellationToken)
+    public async Task<long> CreateCandidate(CandidateCreateDto createDto, CancellationToken cancellationToken)
     {
-        var candidate = _mapper.Map<Candidate>(dto);
+         var candidate = _mapper.Map<Candidate>(createDto);
         
         await _context.Candidates.AddAsync(candidate, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
@@ -56,7 +56,7 @@ public class CandidateService : ICandidateService
         return Unit.Value;
     }
 
-    public async Task<Unit> UpdateCandidate(Candidate dto, CancellationToken cancellationToken)
+    public async Task<Unit> UpdateCandidate(CandidateUpdateDto dto, CancellationToken cancellationToken)
     {
         var entity = await _context.Candidates
             .FirstOrDefaultAsync(i => i.Id == dto.Id, cancellationToken);
@@ -74,7 +74,7 @@ public class CandidateService : ICandidateService
     public async Task<Candidate> GetCandidate(long id, CancellationToken cancellationToken = default)
     {
         var candidate = await _context.Candidates
-            .FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(i => i.Id == id && !i.IsDeleted, cancellationToken);
         
         if (candidate is null)
             throw new NullReferenceException($"Not found");

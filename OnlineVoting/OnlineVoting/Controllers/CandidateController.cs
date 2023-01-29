@@ -17,8 +17,8 @@ public class CandidateController : ApiMediatorController
     }
     
     [HttpPost]
-    public async Task<long> Create(CandidateDto dto, CancellationToken cancellationToken)
-        => await _candidateService.CreateCandidate(dto, cancellationToken);
+    public async Task<long> Create(CandidateCreateDto createDto, CancellationToken cancellationToken)
+        => await _candidateService.CreateCandidate(createDto, cancellationToken);
     
     [HttpDelete]
     public async Task<Unit> Delete(long id, CancellationToken cancellationToken)
@@ -29,7 +29,7 @@ public class CandidateController : ApiMediatorController
         => await _candidateService.RestoreCandidate(id, cancellationToken);
     
     [HttpPost]
-    public async Task<Unit> Update(Candidate dto, CancellationToken cancellationToken)
+    public async Task<Unit> Update(CandidateUpdateDto dto, CancellationToken cancellationToken)
         => await _candidateService.UpdateCandidate(dto, cancellationToken);
 
     [HttpGet]

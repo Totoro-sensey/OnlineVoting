@@ -2,11 +2,8 @@
 
 namespace OnlineVoting.Mappings
 {
-    public interface IMapFrom<T>
+    public interface IMapFrom<T> : IMapped
     {
-        public virtual void Mapping(Profile profile)
-        {
-            profile.CreateMap(typeof(T), GetType());
-        }
+        void IMapped.Mapping(Profile profile) => profile.CreateMap(typeof(T), GetType());
     }
 }
