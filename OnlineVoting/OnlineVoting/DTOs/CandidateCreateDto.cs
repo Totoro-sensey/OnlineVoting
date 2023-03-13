@@ -19,9 +19,4 @@ public class CandidateCreateDto : IMapTo<Candidate>
     /// Age
     /// </summary>
     public long Age { get; set; }
-    
-    /// <summary>
-    /// Deleted
-    /// </summary>
-    public bool IsDeleted { get; set; }
 }
