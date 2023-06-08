@@ -10,7 +10,7 @@ using OnlineVoting.Models;
 
 namespace OnlineVoting.Migrations
 {
-    [DbContext(typeof(ApplicationContext))]
+    [DbContext(typeof(ApplicationDbContext))]
     [Migration("20230122230010_AddIsDeleted")]
     partial class AddIsDeleted
     {

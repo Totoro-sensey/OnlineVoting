@@ -11,7 +11,7 @@ using OnlineVoting.Models;
 
 namespace OnlineVoting.Migrations
 {
-    [DbContext(typeof(ApplicationContext))]
+    [DbContext(typeof(ApplicationDbContext))]
     [Migration("20230325231006_AddUser")]
     partial class AddUser
     {

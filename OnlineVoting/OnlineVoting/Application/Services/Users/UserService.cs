@@ -1,90 +1,109 @@
+using System.Collections;
 using System.Text;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using MediatR;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using OnlineVoting.Application.DTOs.UserDtos.CreateDto;
+using OnlineVoting.Application.Services.Abstracts;
+using OnlineVoting.Domain.Identity.Enums;
 using OnlineVoting.Domain.Models.Entities;
+using OnlineVoting.DTOs.UserDtos.CreateDto;
 using OnlineVoting.DTOs.UserDtos.GetVm;
 using OnlineVoting.Models;
 using OnlineVoting.Models.Identity.Entities;
 using OnlineVoting.Services.Abstracts;
+using SystemOfWidget.Application.Common.Exceptions;
+using SystemOfWidget.Domain.Identity.Entities;
 using UpdateDto = OnlineVoting.DTOs.UserDtos.UpdateDto.UserDto;
-using CreateDto = OnlineVoting.DTOs.UserDtos.CreateDto.UserDto;
 
 namespace OnlineVoting.Services.Users;
 
 public class UserService : IUserService
 {
-    private readonly ApplicationContext _context;
+    private readonly IApplicationDbContext _dbContext;
     private readonly IMapper _mapper;
     private readonly IPasswordService _passwordService;
+    private readonly UserManager<ApplicationUser> _userManager;
 
-    public UserService(ApplicationContext context, IMapper mapper, IPasswordService passwordService)
+    public UserService(IApplicationDbContext dbContext, IMapper mapper, IPasswordService passwordService, UserManager<ApplicationUser> userManager)
     {
-        _context = context;
+        _dbContext = dbContext;
         _mapper = mapper;
         _passwordService = passwordService;
+        _userManager = userManager;
     }
 
-    public async Task<Guid> Create(CreateDto dto, CancellationToken cancellationToken)
+    public async Task<string> Create(ApplicationUserDto dto, CancellationToken cancellationToken)
     {
-        var user = new User();
-        
         byte[] salt = null;
-        user.Password = _passwordService.HashPassword(Encoding.UTF8.GetBytes(dto.Password), ref salt);
-        user.Salt = salt;
-        user.PersonalInformation = new PersonalInformation();
-        user.PersonalInformation.Birthday = dto.PersonalInformation.Birthday.Date;
-        user.Login = dto.PersonalInformation.SNILS;
-        
-        user.PersonalInformation.FirstName = dto.PersonalInformation.FirstName;
-        user.PersonalInformation.LastName = dto.PersonalInformation.LastName;
-        user.PersonalInformation.SNILS = dto.PersonalInformation.SNILS;
-        user.PersonalInformation.PassportSeries = dto.PersonalInformation.PassportSeries;
-        user.PersonalInformation.PassportNumber = dto.PersonalInformation.PassportNumber;
-        
-        await _context.Users.AddAsync(user, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        var personalInfo =  _mapper.Map<PersonalInformation>(dto.PersonalInformation);
+        var password = _passwordService.HashPassword(Encoding.UTF8.GetBytes(dto.Password), ref salt);
+        var entity = new ApplicationUser()
+        {
+            Login = dto.Login,
+            Password = password,
+            Salt = salt,
+            UserName = dto.Login,
+            PersonalInformation = personalInfo
+        };
 
-        return user.Id;
+        await CreateUser(entity, dto.Password);
+        await AddToRoles(entity, dto.Roles);
+        
+        return entity.Id;
+    }
+    private async Task CreateUser(ApplicationUser user, string password)
+    {
+        var result = await _userManager.CreateAsync(user, password);
+        if (!result.Succeeded)
+            throw new BadRequestException(message: $"Не удалось создать пользователя {user.UserName}.");
     }
 
-    public async Task<Unit> Delete(Guid id, CancellationToken cancellationToken)
+    private async Task AddToRoles(ApplicationUser user, IEnumerable<string> roles)
     {
-        var entity = await _context.Users
+        var result = await _userManager.AddToRolesAsync(user, roles);
+        if (!result.Succeeded)
+            throw new BadRequestException(message: $"Не удалось добавить роли к пользователю {user.UserName}.");
+    }
+
+    public async Task<Unit> Delete(string id, CancellationToken cancellationToken)
+    {
+        var entity = await _dbContext.Users
             .FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
 
         if (entity is null)
-            throw new NullReferenceException(nameof(User));
+            throw new NullReferenceException(nameof(ApplicationUser));
         
-        _context.Users.Remove(entity);
+        _dbContext.Users.Remove(entity);
         
         return Unit.Value;
     }
 
-    public Task<Unit> Restore(Guid id, CancellationToken cancellationToken)
+    public Task<Unit> Restore(string id, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
     public async Task<Unit> Update(UpdateDto dto, CancellationToken cancellationToken)
     {
-        var entity = await _context.Users
+        var entity = await _dbContext.Users
             .FirstOrDefaultAsync(i => i.Id == dto.Id, cancellationToken);
 
         if (entity is null)
-            throw new NullReferenceException($"Not found {nameof(User)}");
+            throw new NullReferenceException($"Not found {nameof(ApplicationUser)}");
         
         _mapper.Map(dto, entity);
         
-        await _context.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return Unit.Value;   
     }
 
-    public async Task<UserVm> Get(Guid id, CancellationToken cancellationToken)
+    public async Task<UserVm> Get(string id, CancellationToken cancellationToken)
     {
-        var user = await _context.Users
+        var user = await _dbContext.Users
             .ProjectTo<UserVm>(_mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(i => i.Id == id , cancellationToken);
         
@@ -94,14 +113,14 @@ public class UserService : IUserService
         return user;
     }
     
-    public async Task<long> Vote(Guid userId, Guid candidateId, CancellationToken cancellationToken)
+    public async Task<long> Vote(string userId, long candidateId, CancellationToken cancellationToken)
     {
-        var entity = await _context.Users
+        var entity = await _dbContext.Users
             .Include(i => i.Vote)
             .FirstOrDefaultAsync(i => i.Id == userId, cancellationToken);
 
         if (entity is null)
-            throw new NullReferenceException($"Not found {nameof(User)}");
+            throw new NullReferenceException($"Not found {nameof(ApplicationUser)}");
         
         if (entity.Vote is not null)
             throw new InvalidDataException($"User have a vote already");
@@ -109,11 +128,11 @@ public class UserService : IUserService
         var vote = new Vote
         {
             CandidateId = candidateId,
-            UserId = userId
+            ApplicationUserId = userId
         };
         
-        await _context.Votes.AddAsync(vote, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _dbContext.Votes.AddAsync(vote, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return vote.Id;
     }

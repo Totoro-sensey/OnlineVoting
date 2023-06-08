@@ -1,9 +1,10 @@
 using FluentValidation;
+using OnlineVoting.Application.DTOs.UserDtos.CreateDto;
 using OnlineVoting.DTOs.UserDtos.CreateDto;
 
 namespace OnlineVoting.Services.Users;
 
-public class CreateUserValidator : AbstractValidator<UserDto>
+public class CreateUserValidator : AbstractValidator<ApplicationUserDto>
 {
     public CreateUserValidator()
     {

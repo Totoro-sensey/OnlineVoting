@@ -10,7 +10,7 @@ public class PersonalInformation : BaseEntity
     /// <summary>
     /// User Id
     /// </summary>
-    public Guid UserId { get; set; }
+    public string ApplicationUserId { get; set; }
     
     /// <summary>
     /// First Name
@@ -41,9 +41,4 @@ public class PersonalInformation : BaseEntity
     /// Insurance number of an individual personal account
     /// </summary>
     public string SNILS { get; set; }
-    
-    /// <summary>
-    /// User
-    /// </summary>
-    public User User { get; set; }
 }

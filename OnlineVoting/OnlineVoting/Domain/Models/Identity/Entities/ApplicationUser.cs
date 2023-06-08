@@ -1,18 +1,15 @@
+using Microsoft.AspNetCore.Identity;
+using OnlineVoting.Domain.Common;
 using OnlineVoting.Domain.Models.Entities;
-using OnlineVoting.Models.Common;
+using OnlineVoting.Domain.Models.Identity.Entities;
 
 namespace OnlineVoting.Models.Identity.Entities;
 
 /// <summary>
 /// User
 /// </summary>
-public class User 
+public class ApplicationUser : IdentityUser, IEntityWithId<string>
 {
-    /// <summary>
-    /// Identificator
-    /// </summary>
-    public Guid Id { get; set; }
-    
     /// <summary>
     /// Voter name
     /// </summary>
@@ -38,5 +35,10 @@ public class User
     /// <summary>
     /// Vote
     /// </summary>
-    public Vote Vote { get; set; }
+    public Vote? Vote { get; set; }
+        
+    /// <summary>
+    /// Навигационное свойство - Сессия для обновления JWT
+    /// </summary>
+    public List<RefreshSession> RefreshSessions { get; } = new();
 }

@@ -4,12 +4,12 @@ using OnlineVoting.Models.Identity.Entities;
 
 namespace OnlineVoting.DTOs.UserDtos.GetVm;
 
-public class UserVm : IMapFrom<User>
+public class UserVm : IMapFrom<ApplicationUser>
 {
     /// <summary>
     /// Identificator
     /// </summary>
-    public Guid Id { get; set; }
+    public string Id { get; set; }
     
     /// <summary>
     /// Voter name
@@ -38,7 +38,7 @@ public class UserVm : IMapFrom<User>
     
     public void Mapping(Profile profile)
     {
-        profile.CreateMap<User, UserVm>()
+        profile.CreateMap<ApplicationUser, UserVm>()
             .ForMember(i => i.FirstName,
                 opt => opt.MapFrom(j => j.PersonalInformation.FirstName))
             .ForMember(i => i.LastName,

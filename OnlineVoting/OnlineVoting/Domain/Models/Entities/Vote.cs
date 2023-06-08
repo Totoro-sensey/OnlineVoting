@@ -17,12 +17,12 @@ public class Vote : BaseEntity
     /// <summary>
     /// Users identifier
     /// </summary>
-    public Guid UserId { get; set; }
+    public string ApplicationUserId { get; set; }
     
     /// <summary>
     /// Candidates identifier
     /// </summary>
-    public Guid CandidateId { get; set; }
+    public long CandidateId { get; set; }
     
     //Navigation settings
     
@@ -30,9 +30,4 @@ public class Vote : BaseEntity
     /// Candidate
     /// </summary>
     public Candidate Candidate { get; set; }
-    
-    /// <summary>
-    /// User
-    /// </summary>
-    public User User { get; set; }
 }

@@ -3,12 +3,12 @@ using OnlineVoting.Models.Identity.Entities;
 
 namespace OnlineVoting.DTOs.UserDtos.UpdateDto;
 
-public class UserDto : IMapTo<User>
+public class UserDto : IMapTo<ApplicationUser>
 {
     /// <summary>
     /// Identifier
     /// </summary>
-    public Guid Id { get; set; }
+    public string Id { get; set; }
     
     /// <summary>
     /// Voter name
